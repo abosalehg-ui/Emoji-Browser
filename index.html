@@ -106,10 +106,17 @@
         }
 
         .search-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+@media (min-width: 768px) {
+    .search-container {
+        flex-direction: row;
+    }
+}
 
         #searchInput {
             flex: 1;
