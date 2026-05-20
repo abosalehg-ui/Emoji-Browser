@@ -1,0 +1,65 @@
+[data-theme="dark"] {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --bg-card: #252525;
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0a0;
+  --border-color: #404040;
+  --accent-color: #5b9fd8;
+  --accent-hover: #4a8bc2;
+  --shadow: rgba(0, 0, 0, 0.3);
+  --emoji-hover: #2a3a4a;
+}
+
+[data-theme="sepia"] {
+  --bg-primary: #f4ecd8;
+  --bg-secondary: #ebe3cc;
+  --bg-card: #fbf6e9;
+  --text-primary: #5b4636;
+  --text-secondary: #8a6f5a;
+  --border-color: #d4c5a9;
+  --accent-color: #b07d3a;
+  --accent-hover: #8c5f28;
+  --shadow: rgba(91, 70, 54, 0.15);
+  --emoji-hover: #f7e9c3;
+}
+
+[data-theme="contrast"] {
+  --bg-primary: #000000;
+  --bg-secondary: #0a0a0a;
+  --bg-card: #000000;
+  --text-primary: #ffffff;
+  --text-secondary: #ffff00;
+  --border-color: #ffffff;
+  --accent-color: #00ffff;
+  --accent-hover: #00cccc;
+  --shadow: rgba(255, 255, 255, 0.3);
+  --emoji-hover: #1a1a1a;
+}
+
+[data-theme="contrast"] .emoji-card,
+[data-theme="contrast"] .stats-card,
+[data-theme="contrast"] .search-section,
+[data-theme="contrast"] .modal-content {
+  border-width: 3px;
+}
+
+[data-theme="contrast"] :focus-visible {
+  outline-width: 4px;
+  outline-color: #ffff00;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="auto"] {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --bg-card: #252525;
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0a0;
+    --border-color: #404040;
+    --accent-color: #5b9fd8;
+    --accent-hover: #4a8bc2;
+    --shadow: rgba(0, 0, 0, 0.3);
+    --emoji-hover: #2a3a4a;
+  }
+}

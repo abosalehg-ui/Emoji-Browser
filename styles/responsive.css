@@ -1,0 +1,89 @@
+@media (min-width: 768px) {
+  .search-container {
+    flex-direction: row;
+  }
+}
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.4em;
+  }
+
+  .container {
+    padding: var(--space-md);
+  }
+
+  .emoji-grid {
+    grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+    gap: var(--space-sm);
+  }
+
+  .emoji-card {
+    padding: var(--space-md);
+  }
+
+  .emoji-icon {
+    font-size: 2.4em;
+  }
+
+  .header-content {
+    justify-content: center;
+  }
+
+  .controls {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .modal {
+    padding: var(--space-sm);
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    max-height: 95vh;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .copy-buttons {
+    flex-direction: column;
+  }
+
+  .copy-btn {
+    width: 100%;
+  }
+
+  .section-title {
+    font-size: 1.2em;
+  }
+
+  .toolbar {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .emoji-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  }
+
+  .emoji-icon {
+    font-size: 2em;
+  }
+
+  .emoji-name {
+    font-size: 11px;
+  }
+
+  header {
+    padding: var(--space-md) 0;
+  }
+}
+
+@media (min-width: 1200px) {
+  .emoji-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  }
+}

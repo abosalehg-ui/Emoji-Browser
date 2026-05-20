@@ -1,0 +1,22 @@
+{
+  "name": "متصفح الإيموجي - Emoji Browser",
+  "short_name": "Emoji",
+  "description": "متصفح إيموجي ثنائي اللغة مع البحث والمفضلة والمجموعات المخصصة",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#4a90e2",
+  "background_color": "#f4f0e8",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "./assets/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
