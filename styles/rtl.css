@@ -1,0 +1,38 @@
+[dir="rtl"] .favorite-btn {
+  right: auto;
+  left: 8px;
+}
+
+[dir="rtl"] .select-checkbox {
+  left: auto;
+  right: 8px;
+}
+
+[dir="rtl"] .notification {
+  right: auto;
+  left: var(--space-lg);
+}
+
+[dir="ltr"] .notification {
+  right: var(--space-lg);
+  left: auto;
+}
+
+[dir="rtl"] .dropdown-menu {
+  right: auto;
+  left: 0;
+}
+
+[dir="rtl"] .dropdown-item {
+  text-align: right;
+}
+
+[dir="ltr"] .dropdown-item {
+  text-align: left;
+}
+
+[dir="rtl"] .skip-link {
+  left: auto;
+  right: 0;
+  border-radius: 0 0 0 var(--radius-md);
+}
