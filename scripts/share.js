@@ -2,7 +2,7 @@ import { toBase64Url, fromBase64Url, copyText } from './utils.js';
 import { t } from './i18n.js';
 import { showNotification } from './notify.js';
 import * as state from './state.js';
-import { addManyToCollection, createCollection, getCollectionName } from './collections.js';
+import { createCollection, getCollectionName } from './collections.js';
 import { getLang } from './i18n.js';
 
 export function buildShareUrl(collection) {
@@ -29,7 +29,7 @@ export async function shareCollection(collection) {
         url,
       });
       return;
-    } catch (err) {
+    } catch {
       /* fall through to clipboard */
     }
   }
@@ -42,11 +42,29 @@ export function parseShareUrl() {
   const encoded = params.get('share');
   if (!encoded) return null;
   try {
-    return JSON.parse(fromBase64Url(encoded));
+    return sanitizeSharePayload(JSON.parse(fromBase64Url(encoded)));
   } catch (err) {
     console.warn('Failed to parse share URL:', err);
     return null;
   }
+}
+
+// Shared payloads come from untrusted URLs. Coerce every field to a known,
+// safe shape before it ever reaches state or the DOM.
+function sanitizeSharePayload(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const name = raw.n && typeof raw.n === 'object' ? raw.n : {};
+  const emojis = Array.isArray(raw.e)
+    ? raw.e.filter((e) => typeof e === 'string').slice(0, 500)
+    : [];
+  return {
+    n: {
+      ar: typeof name.ar === 'string' ? name.ar.slice(0, 100) : '',
+      en: typeof name.en === 'string' ? name.en.slice(0, 100) : '',
+    },
+    e: emojis,
+    c: typeof raw.c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(raw.c) ? raw.c : '',
+  };
 }
 
 export function clearShareParam() {

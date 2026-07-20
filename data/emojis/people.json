@@ -159,7 +159,6 @@
     {"emoji":"👨‍⚖️","unicode":"U+1F468 U+200D U+2696 U+FE0F","arName":"قاضي","enName":"Man Judge","desc":"قاضي","descEn":"Judge","category":"people","keywords":["judge","قاضي"]},
     {"emoji":"👨‍💼","unicode":"U+1F468 U+200D U+1F4BC","arName":"موظف مكتب","enName":"Man Office Worker","desc":"موظف","descEn":"Office worker","category":"people","keywords":["office","موظف"]},
     {"emoji":"👨‍🎤","unicode":"U+1F468 U+200D U+1F3A4","arName":"مغني","enName":"Man Singer","desc":"مغني","descEn":"Singer","category":"people","keywords":["singer","مغني"]},
-    {"emoji":"👨‍🚀","unicode":"U+1F468 U+200D U+1F680","arName":"رائد فضاء","enName":"Astronaut Man","desc":"رائد فضاء","descEn":"Astronaut","category":"people","keywords":["astronaut"]},
     {"emoji":"👨‍👩‍👧","unicode":"U+1F468 U+200D U+1F469 U+200D U+1F467","arName":"عائلة بأب وأم وبنت","enName":"Family: Man, Woman, Girl","desc":"عائلة","descEn":"Family","category":"people","keywords":["family","عائلة"]},
     {"emoji":"👨‍👩‍👦","unicode":"U+1F468 U+200D U+1F469 U+200D U+1F466","arName":"عائلة بأب وأم وولد","enName":"Family: Man, Woman, Boy","desc":"عائلة","descEn":"Family","category":"people","keywords":["family","عائلة"]},
     {"emoji":"👨‍👩‍👧‍👦","unicode":"U+1F468 U+200D U+1F469 U+200D U+1F467 U+200D U+1F466","arName":"عائلة كاملة","enName":"Family: Man, Woman, Girl, Boy","desc":"عائلة من أربعة","descEn":"Family of four","category":"people","keywords":["family","عائلة"]}

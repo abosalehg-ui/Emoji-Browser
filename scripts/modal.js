@@ -1,11 +1,12 @@
 import { t, getLang } from './i18n.js';
-import { copyText, htmlEntity, escapeHtml } from './utils.js';
+import { copyText, htmlEntity } from './utils.js';
 import * as state from './state.js';
 import { TONES, applyTone, supports } from './skinTone.js';
 import { showNotification } from './notify.js';
 
 let currentEmoji = null;
 let lastFocusedElement = null;
+let trapHandler = null;
 
 export function openEmojiModal(emojiObj) {
   currentEmoji = emojiObj;
@@ -15,7 +16,9 @@ export function openEmojiModal(emojiObj) {
   const lang = getLang();
   const skinTone = state.get('skinTone');
 
-  const displayEmoji = supports(emojiObj) ? applyTone(emojiObj.emoji, skinTone) : emojiObj.emoji;
+  const displayEmoji = supports(emojiObj)
+    ? applyTone(emojiObj.emoji, skinTone)
+    : emojiObj.emoji;
 
   document.getElementById('modalEmoji').textContent = displayEmoji;
   document.getElementById('emojiArName').textContent = emojiObj.arName || '-';
@@ -85,6 +88,10 @@ export function closeModal() {
   const modal = document.getElementById('emojiModal');
   modal.classList.remove('show');
   modal.setAttribute('aria-hidden', 'true');
+  if (trapHandler) {
+    modal.removeEventListener('keydown', trapHandler);
+    trapHandler = null;
+  }
   currentEmoji = null;
   if (lastFocusedElement && lastFocusedElement.focus) {
     lastFocusedElement.focus();
@@ -120,11 +127,8 @@ function trapFocus(modal) {
   const last = focusable[focusable.length - 1];
   first.focus();
 
-  modal.addEventListener('keydown', function handler(e) {
-    if (!modal.classList.contains('show')) {
-      modal.removeEventListener('keydown', handler);
-      return;
-    }
+  if (trapHandler) modal.removeEventListener('keydown', trapHandler);
+  trapHandler = (e) => {
     if (e.key !== 'Tab') return;
     if (e.shiftKey && document.activeElement === first) {
       e.preventDefault();
@@ -133,7 +137,8 @@ function trapFocus(modal) {
       e.preventDefault();
       first.focus();
     }
-  });
+  };
+  modal.addEventListener('keydown', trapHandler);
 }
 
 export function getCurrentEmoji() {

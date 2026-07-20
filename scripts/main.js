@@ -1,18 +1,16 @@
 import * as state from './state.js';
 import { load, save } from './storage.js';
 import { setLang, applyTranslations, t, getLang } from './i18n.js';
-import { setTheme, cycleTheme, themeIcon, getSystemTheme } from './theme.js';
-import { searchEmojis, filterByCategory, buildIndex } from './search.js';
-import { renderGrid, createEmojiCard } from './render.js';
+import { setTheme, themeIcon, getSystemTheme } from './theme.js';
+import { searchEmojis, filterByCategory, buildIndex, prepareSearch } from './search.js';
+import { renderGrid } from './render.js';
 import { openEmojiModal, closeModal, copyEmojiFromModal } from './modal.js';
-import { showNotification } from './notify.js';
 import { toggleFavorite } from './favorites.js';
 import { addToRecent } from './recent.js';
 import {
   createCollection,
   deleteCollection,
   renameCollection,
-  addManyToCollection,
   getCollection,
   getCollectionName,
 } from './collections.js';
@@ -25,7 +23,6 @@ import {
   refreshBar,
 } from './selection.js';
 import {
-  buildShareUrl,
   shareCollection,
   parseShareUrl,
   importSharedCollection,
@@ -36,7 +33,19 @@ import { renderDashboard, recordUsage } from './stats.js';
 import { registerShortcuts } from './shortcuts.js';
 import { setupRovingTabindex } from './a11y.js';
 import { initPwa, promptInstall } from './pwa.js';
-import { debounce } from './utils.js';
+import { toggleTheme, toggleLang } from './prefs.js';
+import { debounce, escapeHtml } from './utils.js';
+
+// Shared handlers for every emoji grid (main, recent, favorites).
+const gridHandlers = {
+  onClick: (e) => {
+    addToRecent(e);
+    recordUsage(e.emoji);
+    openEmojiModal(e);
+  },
+  onFavorite: toggleFavorite,
+  onSelect: toggleSelected,
+};
 
 async function loadEmojiData() {
   try {
@@ -56,6 +65,7 @@ async function loadEmojiData() {
     );
     await Promise.all(loadingPromises);
 
+    prepareSearch(all);
     state.set('emojis', all);
     state.set('emojisByChar', buildIndex(all));
     state.set('filtered', all);
@@ -119,24 +129,10 @@ function init() {
 }
 
 function setupListeners() {
-  document.getElementById('themeToggle').addEventListener('click', () => {
-    const next = cycleTheme(state.get('theme'));
-    state.set('theme', next);
-    setTheme(next);
-    const prefs = state.get('prefs');
-    prefs.theme = next;
-    state.set('prefs', prefs);
-    document.getElementById('themeToggle').textContent = themeIcon(next);
-  });
+  document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 
   document.getElementById('langToggle').addEventListener('click', () => {
-    const nextLang = getLang() === 'ar' ? 'en' : 'ar';
-    state.set('lang', nextLang);
-    const prefs = state.get('prefs');
-    prefs.lang = nextLang;
-    state.set('prefs', prefs);
-    setLang(nextLang);
-    applyTranslations();
+    toggleLang();
     updateLangButton();
     renderCategoriesUI();
     renderAllSections();
@@ -146,15 +142,15 @@ function setupListeners() {
   document.getElementById('emojiModal').addEventListener('click', (e) => {
     if (e.target.id === 'emojiModal') closeModal();
   });
-  document.getElementById('copyEmoji').addEventListener('click', () =>
-    copyEmojiFromModal('emoji')
-  );
-  document.getElementById('copyUnicode').addEventListener('click', () =>
-    copyEmojiFromModal('unicode')
-  );
-  document.getElementById('copyHtml').addEventListener('click', () =>
-    copyEmojiFromModal('html')
-  );
+  document
+    .getElementById('copyEmoji')
+    .addEventListener('click', () => copyEmojiFromModal('emoji'));
+  document
+    .getElementById('copyUnicode')
+    .addEventListener('click', () => copyEmojiFromModal('unicode'));
+  document
+    .getElementById('copyHtml')
+    .addEventListener('click', () => copyEmojiFromModal('html'));
 
   const searchInput = document.getElementById('searchInput');
   const debounced = debounce(() => performSearch(), 200);
@@ -284,15 +280,7 @@ function performFilter() {
 
 function renderMainGrid() {
   const container = document.getElementById('emojiGrid');
-  renderGrid(container, state.get('filtered'), {
-    onClick: (e) => {
-      addToRecent(e);
-      recordUsage(e.emoji);
-      openEmojiModal(e);
-    },
-    onFavorite: toggleFavorite,
-    onSelect: toggleSelected,
-  });
+  renderGrid(container, state.get('filtered'), gridHandlers);
 }
 
 function renderRecentSection() {
@@ -309,15 +297,8 @@ function renderRecentSection() {
     .slice(0, 10)
     .map((r) => byChar.get(r.e))
     .filter(Boolean);
-  renderGrid(container, items, {
-    onClick: (e) => {
-      addToRecent(e);
-      recordUsage(e.emoji);
-      openEmojiModal(e);
-    },
-    onFavorite: toggleFavorite,
-    onSelect: toggleSelected,
-  });
+  renderGrid(container, items, gridHandlers);
+  setupRovingTabindex('#recentEmojis');
 }
 
 function renderFavoritesSection() {
@@ -331,15 +312,8 @@ function renderFavoritesSection() {
   }
   section.style.display = 'block';
   const items = favs.map((c) => byChar.get(c)).filter(Boolean);
-  renderGrid(container, items, {
-    onClick: (e) => {
-      addToRecent(e);
-      recordUsage(e.emoji);
-      openEmojiModal(e);
-    },
-    onFavorite: toggleFavorite,
-    onSelect: toggleSelected,
-  });
+  renderGrid(container, items, gridHandlers);
+  setupRovingTabindex('#favoriteEmojis');
 }
 
 function renderCollectionsBar() {
@@ -358,16 +332,24 @@ function renderCollectionsBar() {
     const chip = document.createElement('div');
     chip.className = 'collection-chip' + (current === coll.id ? ' active' : '');
     chip.style.borderColor = coll.color;
-    chip.innerHTML = `
-      <span>${getCollectionName(coll, lang) || 'Untitled'}</span>
+    // Collection names may originate from untrusted sources (shared URLs,
+    // imported files). Render them via textContent to prevent XSS; only the
+    // static structure below is built from trusted strings.
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = getCollectionName(coll, lang) || 'Untitled';
+    chip.appendChild(nameSpan);
+    chip.insertAdjacentHTML(
+      'beforeend',
+      `
       <span class="count">${coll.emojis.length}</span>
-      <button class="icon-btn" data-action="share" title="${t('btnShare')}"
+      <button class="icon-btn" data-action="share" title="${escapeHtml(t('btnShare'))}"
         style="background:transparent;color:inherit;padding:0;min-width:auto;min-height:auto;font-size:14px;">🔗</button>
-      <button class="icon-btn" data-action="rename" title="${t('btnRename')}"
+      <button class="icon-btn" data-action="rename" title="${escapeHtml(t('btnRename'))}"
         style="background:transparent;color:inherit;padding:0;min-width:auto;min-height:auto;font-size:14px;">✏️</button>
-      <button class="icon-btn" data-action="delete" title="${t('btnDelete')}"
+      <button class="icon-btn" data-action="delete" title="${escapeHtml(t('btnDelete'))}"
         style="background:transparent;color:inherit;padding:0;min-width:auto;min-height:auto;font-size:14px;">🗑️</button>
-    `;
+    `
+    );
     chip.addEventListener('click', (e) => {
       const action = e.target.closest('[data-action]');
       if (action) {
@@ -403,10 +385,9 @@ function renderAllSections() {
 function refreshSelectedCards() {
   const sel = state.get('selected');
   document.querySelectorAll('.emoji-card').forEach((card) => {
-    const name = card.querySelector('.emoji-icon');
-    if (!name) return;
-    const ch = name.textContent.trim();
-    const isSel = sel.has(ch) || [...sel].some((s) => ch.startsWith(s));
+    const ch = card.dataset.emoji;
+    if (!ch) return;
+    const isSel = sel.has(ch);
     card.classList.toggle('selected', isSel);
     const box = card.querySelector('.select-checkbox');
     if (box) box.textContent = isSel ? '✓' : '';
@@ -434,9 +415,10 @@ function handleSharedCollection(payload) {
     ? payload.n[lang] || payload.n.ar || payload.n.en
     : 'Shared Collection';
   const count = payload.e ? payload.e.length : 0;
-  const msg = lang === 'ar'
-    ? `استيراد مجموعة "${name}" تحتوي على ${count} إيموجي؟`
-    : `Import collection "${name}" with ${count} emojis?`;
+  const msg =
+    lang === 'ar'
+      ? `استيراد مجموعة "${name}" تحتوي على ${count} إيموجي؟`
+      : `Import collection "${name}" with ${count} emojis?`;
   if (confirm(msg)) {
     importSharedCollection(payload);
   }

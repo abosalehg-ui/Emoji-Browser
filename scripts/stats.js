@@ -1,5 +1,5 @@
 import * as state from './state.js';
-import { t, getLang } from './i18n.js';
+import { t } from './i18n.js';
 import { escapeHtml } from './utils.js';
 
 export function recordUsage(emoji) {
@@ -36,7 +36,6 @@ export function resetStats() {
 }
 
 export function renderDashboard(container) {
-  const lang = getLang();
   const total = totalCopies();
   const unique = uniqueCount();
   const top = topUsed(10);

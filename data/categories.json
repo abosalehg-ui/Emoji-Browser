@@ -1,15 +1,33 @@
 {
   "schemaVersion": 1,
   "categories": [
-    { "id": "smileys",    "ar": "وجوه ومشاعر",    "en": "Smileys & Emotion",  "icon": "😀", "order": 1 },
-    { "id": "people",     "ar": "أشخاص وجسم",     "en": "People & Body",       "icon": "👋", "order": 2 },
-    { "id": "animals",    "ar": "حيوانات",         "en": "Animals",             "icon": "🐶", "order": 3 },
-    { "id": "nature",     "ar": "طبيعة ونباتات",  "en": "Nature & Plants",     "icon": "🌳", "order": 4 },
-    { "id": "food",       "ar": "طعام وشراب",      "en": "Food & Drink",        "icon": "🍔", "order": 5 },
-    { "id": "travel",     "ar": "سفر وأماكن",      "en": "Travel & Places",     "icon": "✈️", "order": 6 },
-    { "id": "activities", "ar": "أنشطة ورياضة",    "en": "Activities & Sport",  "icon": "⚽", "order": 7 },
-    { "id": "objects",    "ar": "أشياء",          "en": "Objects",             "icon": "💡", "order": 8 },
-    { "id": "symbols",    "ar": "رموز",           "en": "Symbols",             "icon": "❤️", "order": 9 },
-    { "id": "flags",      "ar": "أعلام",          "en": "Flags",               "icon": "🚩", "order": 10 }
+    {
+      "id": "smileys",
+      "ar": "وجوه ومشاعر",
+      "en": "Smileys & Emotion",
+      "icon": "😀",
+      "order": 1
+    },
+    { "id": "people", "ar": "أشخاص وجسم", "en": "People & Body", "icon": "👋", "order": 2 },
+    { "id": "animals", "ar": "حيوانات", "en": "Animals", "icon": "🐶", "order": 3 },
+    {
+      "id": "nature",
+      "ar": "طبيعة ونباتات",
+      "en": "Nature & Plants",
+      "icon": "🌳",
+      "order": 4
+    },
+    { "id": "food", "ar": "طعام وشراب", "en": "Food & Drink", "icon": "🍔", "order": 5 },
+    { "id": "travel", "ar": "سفر وأماكن", "en": "Travel & Places", "icon": "✈️", "order": 6 },
+    {
+      "id": "activities",
+      "ar": "أنشطة ورياضة",
+      "en": "Activities & Sport",
+      "icon": "⚽",
+      "order": 7
+    },
+    { "id": "objects", "ar": "أشياء", "en": "Objects", "icon": "💡", "order": 8 },
+    { "id": "symbols", "ar": "رموز", "en": "Symbols", "icon": "❤️", "order": 9 },
+    { "id": "flags", "ar": "أعلام", "en": "Flags", "icon": "🚩", "order": 10 }
   ]
 }

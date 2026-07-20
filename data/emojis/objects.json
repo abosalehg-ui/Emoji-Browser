@@ -241,7 +241,6 @@
     {"emoji":"⚱️","unicode":"U+26B1 U+FE0F","arName":"جرة جنازة","enName":"Funeral Urn","desc":"جرة","descEn":"Urn","category":"objects","keywords":["urn"]},
     {"emoji":"🗿","unicode":"U+1F5FF","arName":"موياي","enName":"Moai","desc":"تمثال موياي","descEn":"Moai","category":"objects","keywords":["moai"]},
     {"emoji":"🪧","unicode":"U+1FAA7","arName":"لافتة","enName":"Placard","desc":"لافتة","descEn":"Placard","category":"objects","keywords":["placard","لافتة"]},
-    {"emoji":"🪪","unicode":"U+1FAAA","arName":"بطاقة هوية","enName":"Identification Card","desc":"هوية","descEn":"ID card","category":"objects","keywords":["id","هوية"]},
-    {"emoji":"🔮","unicode":"U+1F52E","arName":"كرة بلورية","enName":"Crystal Ball","desc":"كرة سحرية","descEn":"Crystal ball","category":"objects","keywords":["crystal"]}
+    {"emoji":"🪪","unicode":"U+1FAAA","arName":"بطاقة هوية","enName":"Identification Card","desc":"هوية","descEn":"ID card","category":"objects","keywords":["id","هوية"]}
   ]
 }

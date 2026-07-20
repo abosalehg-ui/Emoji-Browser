@@ -1,6 +1,12 @@
+const wired = new WeakSet();
+
 export function setupRovingTabindex(gridSelector) {
   const grid = document.querySelector(gridSelector);
   if (!grid) return;
+  // Grid containers persist across re-renders; only attach the handler once
+  // to avoid stacking duplicate listeners on every render.
+  if (wired.has(grid)) return;
+  wired.add(grid);
   grid.addEventListener('keydown', (e) => {
     if (!['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key))
       return;

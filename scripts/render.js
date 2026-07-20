@@ -8,6 +8,8 @@ export function createEmojiCard(emojiObj, { onClick, onFavorite, onSelect } = {}
   card.className = 'emoji-card';
   card.setAttribute('role', 'gridcell');
   card.setAttribute('tabindex', '0');
+  // Base emoji char, independent of any skin-tone modifier shown to the user.
+  card.dataset.emoji = emojiObj.emoji;
 
   const favorites = state.get('favorites');
   const selected = state.get('selected');
@@ -18,7 +20,9 @@ export function createEmojiCard(emojiObj, { onClick, onFavorite, onSelect } = {}
   const isSel = selected.has(emojiObj.emoji);
   if (isSel) card.classList.add('selected');
 
-  const displayEmoji = supports(emojiObj) ? applyTone(emojiObj.emoji, skinTone) : emojiObj.emoji;
+  const displayEmoji = supports(emojiObj)
+    ? applyTone(emojiObj.emoji, skinTone)
+    : emojiObj.emoji;
   const name = lang === 'ar' ? emojiObj.arName : emojiObj.enName;
 
   card.setAttribute('aria-label', `${name}, ${emojiObj.unicode || ''}`);

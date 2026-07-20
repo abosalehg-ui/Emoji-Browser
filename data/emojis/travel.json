@@ -2,7 +2,6 @@
   "schemaVersion": 1,
   "category": "travel",
   "emojis": [
-    {"emoji":"🌍","unicode":"U+1F30D","arName":"كرة أرضية أوروبا","enName":"Globe Europe-Africa","desc":"الأرض","descEn":"Earth Europe","category":"travel","keywords":["globe","earth"]},
     {"emoji":"🗺️","unicode":"U+1F5FA U+FE0F","arName":"خريطة","enName":"World Map","desc":"خريطة","descEn":"Map","category":"travel","keywords":["map","خريطة"]},
     {"emoji":"🗾","unicode":"U+1F5FE","arName":"خريطة اليابان","enName":"Map of Japan","desc":"اليابان","descEn":"Japan","category":"travel","keywords":["japan"]},
     {"emoji":"🧭","unicode":"U+1F9ED","arName":"بوصلة","enName":"Compass","desc":"بوصلة","descEn":"Compass","category":"travel","keywords":["compass","بوصلة"]},

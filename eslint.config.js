@@ -1,0 +1,77 @@
+export default [
+  {
+    files: ['scripts/tools/**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: {
+        process: 'readonly',
+        console: 'readonly',
+        URL: 'readonly',
+      },
+    },
+    rules: {
+      'no-undef': 'error',
+      'no-var': 'error',
+      'prefer-const': 'warn',
+    },
+  },
+  {
+    files: ['scripts/**/*.js', 'test/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: {
+        window: 'readonly',
+        document: 'readonly',
+        navigator: 'readonly',
+        localStorage: 'readonly',
+        crypto: 'readonly',
+        fetch: 'readonly',
+        console: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        btoa: 'readonly',
+        atob: 'readonly',
+        TextEncoder: 'readonly',
+        TextDecoder: 'readonly',
+        Uint8Array: 'readonly',
+        URL: 'readonly',
+        URLSearchParams: 'readonly',
+        Blob: 'readonly',
+        FileReader: 'readonly',
+        Event: 'readonly',
+        Response: 'readonly',
+        prompt: 'readonly',
+        confirm: 'readonly',
+      },
+    },
+    rules: {
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      'no-undef': 'error',
+      'no-var': 'error',
+      'prefer-const': 'warn',
+      eqeqeq: ['warn', 'smart'],
+    },
+  },
+  {
+    files: ['sw.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'script',
+      globals: {
+        self: 'readonly',
+        caches: 'readonly',
+        fetch: 'readonly',
+        console: 'readonly',
+        URL: 'readonly',
+        Response: 'readonly',
+        Promise: 'readonly',
+      },
+    },
+    rules: {
+      'no-undef': 'error',
+      'no-var': 'error',
+    },
+  },
+];
