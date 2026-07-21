@@ -24,9 +24,7 @@ export function renameCollection(id, newName) {
   state.set(
     'collections',
     colls.map((c) =>
-      c.id === id
-        ? { ...c, name: { ...c.name, [lang]: newName }, updatedAt: Date.now() }
-        : c
+      c.id === id ? { ...c, name: { ...c.name, [lang]: newName }, updatedAt: Date.now() } : c
     )
   );
 }

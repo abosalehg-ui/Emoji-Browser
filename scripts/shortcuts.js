@@ -1,10 +1,14 @@
 import * as state from './state.js';
-import { setTheme, cycleTheme, themeIcon } from './theme.js';
-import { setLang, applyTranslations } from './i18n.js';
 import { enterSelectMode, exitSelectMode } from './selection.js';
 import { closeModal } from './modal.js';
+import { toggleTheme, toggleLang } from './prefs.js';
 
-export function registerShortcuts({ onLangChange, onSearchFocus, onThemeChange, onStatsToggle }) {
+export function registerShortcuts({
+  onLangChange,
+  onSearchFocus,
+  onThemeChange,
+  onStatsToggle,
+}) {
   document.addEventListener('keydown', (e) => {
     const tag = (e.target.tagName || '').toLowerCase();
     const inField = tag === 'input' || tag === 'textarea' || e.target.isContentEditable;
@@ -39,23 +43,10 @@ export function registerShortcuts({ onLangChange, onSearchFocus, onThemeChange, 
       e.preventDefault();
       if (onSearchFocus) onSearchFocus();
     } else if (e.key.toLowerCase() === 't') {
-      const next = cycleTheme(state.get('theme'));
-      state.set('theme', next);
-      setTheme(next);
-      const prefs = state.get('prefs') || {};
-      prefs.theme = next;
-      state.set('prefs', prefs);
-      const btn = document.getElementById('themeToggle');
-      if (btn) btn.textContent = themeIcon(next);
+      const next = toggleTheme();
       if (onThemeChange) onThemeChange(next);
     } else if (e.key.toLowerCase() === 'l') {
-      const nextLang = state.get('lang') === 'ar' ? 'en' : 'ar';
-      state.set('lang', nextLang);
-      const prefs = state.get('prefs') || {};
-      prefs.lang = nextLang;
-      state.set('prefs', prefs);
-      setLang(nextLang);
-      applyTranslations();
+      const nextLang = toggleLang();
       if (onLangChange) onLangChange(nextLang);
     } else if (e.key.toLowerCase() === 's') {
       if (state.get('selectMode')) exitSelectMode();

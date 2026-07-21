@@ -1,4 +1,4 @@
-[data-theme="dark"] {
+[data-theme='dark'] {
   --bg-primary: #1a1a1a;
   --bg-secondary: #2d2d2d;
   --bg-card: #252525;
@@ -11,7 +11,7 @@
   --emoji-hover: #2a3a4a;
 }
 
-[data-theme="sepia"] {
+[data-theme='sepia'] {
   --bg-primary: #f4ecd8;
   --bg-secondary: #ebe3cc;
   --bg-card: #fbf6e9;
@@ -24,7 +24,7 @@
   --emoji-hover: #f7e9c3;
 }
 
-[data-theme="contrast"] {
+[data-theme='contrast'] {
   --bg-primary: #000000;
   --bg-secondary: #0a0a0a;
   --bg-card: #000000;
@@ -37,20 +37,20 @@
   --emoji-hover: #1a1a1a;
 }
 
-[data-theme="contrast"] .emoji-card,
-[data-theme="contrast"] .stats-card,
-[data-theme="contrast"] .search-section,
-[data-theme="contrast"] .modal-content {
+[data-theme='contrast'] .emoji-card,
+[data-theme='contrast'] .stats-card,
+[data-theme='contrast'] .search-section,
+[data-theme='contrast'] .modal-content {
   border-width: 3px;
 }
 
-[data-theme="contrast"] :focus-visible {
+[data-theme='contrast'] :focus-visible {
   outline-width: 4px;
   outline-color: #ffff00;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="auto"] {
+  :root[data-theme='auto'] {
     --bg-primary: #1a1a1a;
     --bg-secondary: #2d2d2d;
     --bg-card: #252525;

@@ -1,4 +1,7 @@
-const CACHE_VERSION = 'v1.0.0';
+// Keep this in sync with "version" in data/manifest.json and package.json.
+// The validate:data check (run in CI) fails the build if they drift, which is
+// what forces the cache to be invalidated whenever the app is re-released.
+const CACHE_VERSION = 'v2.0.0';
 const CACHE_NAME = `emoji-browser-${CACHE_VERSION}`;
 const MANIFEST_URL = './data/manifest.json';
 
@@ -23,9 +26,9 @@ self.addEventListener('activate', (event) => {
     (async () => {
       const keys = await caches.keys();
       await Promise.all(
-        keys.filter((k) => k.startsWith('emoji-browser-') && k !== CACHE_NAME).map((k) =>
-          caches.delete(k)
-        )
+        keys
+          .filter((k) => k.startsWith('emoji-browser-') && k !== CACHE_NAME)
+          .map((k) => caches.delete(k))
       );
       await self.clients.claim();
     })()

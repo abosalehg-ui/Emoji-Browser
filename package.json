@@ -1,0 +1,32 @@
+{
+  "name": "emoji-browser",
+  "version": "2.0.0",
+  "description": "Bilingual (Arabic/English) emoji browser PWA — search, favorites, collections, and usage stats. Zero runtime dependencies.",
+  "type": "module",
+  "scripts": {
+    "start": "npx --yes serve .",
+    "dev": "npx --yes serve .",
+    "lint": "eslint scripts test",
+    "format": "prettier --write \"**/*.{js,css,json,md}\"",
+    "format:check": "prettier --check \"**/*.{js,css,json,md}\"",
+    "validate:data": "node scripts/tools/validate-data.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "npm run lint && npm run validate:data && npm run test"
+  },
+  "keywords": [
+    "emoji",
+    "pwa",
+    "arabic",
+    "rtl",
+    "vanilla-js",
+    "offline"
+  ],
+  "author": "Abdulkareem Al-Aboud <abo.saleh.g@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^9.15.0",
+    "prettier": "^3.3.3",
+    "vitest": "^2.1.5"
+  }
+}

@@ -120,7 +120,6 @@
     {"emoji":"🪰","unicode":"U+1FAB0","arName":"ذبابة","enName":"Fly","desc":"ذبابة","descEn":"Fly","category":"animals","keywords":["fly","ذبابة"]},
     {"emoji":"🪱","unicode":"U+1FAB1","arName":"دودة طويلة","enName":"Worm","desc":"دودة","descEn":"Worm","category":"animals","keywords":["worm","دودة"]},
     {"emoji":"🦠","unicode":"U+1F9A0","arName":"ميكروب","enName":"Microbe","desc":"بكتيريا","descEn":"Microbe","category":"animals","keywords":["microbe","ميكروب"]},
-    {"emoji":"🐳","unicode":"U+1F433","arName":"حوت ينفث","enName":"Whale","desc":"حوت","descEn":"Whale","category":"animals","keywords":["whale","حوت"]},
     {"emoji":"🦀","unicode":"U+1F980","arName":"سلطعون","enName":"Crab","desc":"سلطعون","descEn":"Crab","category":"animals","keywords":["crab","سلطعون"]},
     {"emoji":"🦞","unicode":"U+1F99E","arName":"كركند","enName":"Lobster","desc":"كركند","descEn":"Lobster","category":"animals","keywords":["lobster","كركند"]},
     {"emoji":"🦐","unicode":"U+1F990","arName":"جمبري","enName":"Shrimp","desc":"جمبري","descEn":"Shrimp","category":"animals","keywords":["shrimp","جمبري"]},
