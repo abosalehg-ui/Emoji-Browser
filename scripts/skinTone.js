@@ -16,7 +16,11 @@ export const TONES = [
 export function applyTone(emoji, toneId) {
   const tone = TONES.find((t) => t.id === toneId);
   if (!tone || !tone.modifier) return emoji;
-  return emoji + tone.modifier;
+  // A modifier must follow the base code point directly. Five of the toneable
+  // records (🖐️ ✌️ ☝️ ✍️ 🕵️) carry a U+FE0F presentation selector, and
+  // "base + FE0F + modifier" is not a valid sequence — it renders as the
+  // emoji followed by a detached colour swatch.
+  return emoji.replace(/\uFE0F/g, '') + tone.modifier;
 }
 
 export function supports(emojiObj) {

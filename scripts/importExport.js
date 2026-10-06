@@ -2,6 +2,8 @@ import { exportData, importData } from './storage.js';
 import * as state from './state.js';
 import { t } from './i18n.js';
 import { showNotification } from './notify.js';
+import { applyPrefs } from './prefs.js';
+import { choiceDialog } from './dialog.js';
 
 const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
 
@@ -56,7 +58,7 @@ export function triggerImport(mode = 'merge') {
         const next = importData(parsed, currentState, mode);
         state.set('favorites', next.favorites);
         state.set('collections', next.collections);
-        if (next.prefs) state.set('prefs', next.prefs);
+        applyPrefs(next.prefs);
         if (mode === 'replace' && next.stats) state.set('stats', next.stats);
         showNotification(t('notificationImported'));
       } catch (err) {
@@ -71,17 +73,14 @@ export function triggerImport(mode = 'merge') {
   input.click();
 }
 
-// Asks which import mode to use, wiring up the merge/replace strings that were
-// already translated but unreachable from the UI. Returns null when cancelled.
+// Asks which import mode to use. Resolves with 'merge', 'replace', or null
+// when cancelled.
 export function promptImportMode() {
-  const message =
-    `${t('importPrompt')}\n` +
-    `1 = ${t('btnMerge')} (${t('importMergeDesc')})\n` +
-    `2 = ${t('btnReplace')} (${t('importReplaceDesc')})`;
-  const answer = prompt(message, '1');
-  if (answer === null) return null;
-  const choice = answer.trim();
-  if (choice === '1') return 'merge';
-  if (choice === '2') return 'replace';
-  return null;
+  return choiceDialog({
+    title: t('importPrompt'),
+    options: [
+      { label: t('btnMerge'), description: t('importMergeDesc'), value: 'merge' },
+      { label: t('btnReplace'), description: t('importReplaceDesc'), value: 'replace' },
+    ],
+  });
 }

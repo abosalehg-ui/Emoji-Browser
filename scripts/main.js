@@ -3,7 +3,12 @@ import { load, save } from './storage.js';
 import { setLang, applyTranslations, t, getLang } from './i18n.js';
 import { setTheme, themeIcon } from './theme.js';
 import { searchEmojis, filterByCategory, buildIndex, prepareSearch } from './search.js';
-import { renderGrid, updateFavoriteButtons, renderGridStatus } from './render.js';
+import {
+  renderGrid,
+  updateFavoriteButtons,
+  updateSelectedCards,
+  renderGridStatus,
+} from './render.js';
 import { openEmojiModal, closeModal, copyEmojiFromModal } from './modal.js';
 import { toggleFavorite } from './favorites.js';
 import { addToRecent } from './recent.js';
@@ -30,20 +35,25 @@ import {
   clearShareParam,
 } from './share.js';
 import { downloadExport, triggerImport, promptImportMode } from './importExport.js';
-import { renderDashboard, recordUsage } from './stats.js';
+import { renderDashboard } from './stats.js';
 import { registerShortcuts } from './shortcuts.js';
 import { setupRovingTabindex } from './a11y.js';
 import { initPwa, promptInstall } from './pwa.js';
 import { toggleTheme, toggleLang } from './prefs.js';
 import { showNotification } from './notify.js';
 import { debounce } from './utils.js';
-import { renderCategoriesUI, renderCollectionsBar, pickCollection } from './views.js';
+import {
+  renderCategoriesUI,
+  renderCollectionsBar,
+  pickCollection,
+  renderMiniSection,
+} from './views.js';
 
 // Shared handlers for every emoji grid (main, recent, favorites).
 const gridHandlers = {
+  // Usage stats are recorded on copy (modal.js / selection.js), not here.
   onClick: (e) => {
     addToRecent(e);
-    recordUsage(e.emoji);
     openEmojiModal(e);
   },
   onFavorite: toggleFavorite,
@@ -86,6 +96,28 @@ async function loadEmojiData() {
   state.set('filtered', all);
 }
 
+// The CSP is delivered by <meta>, which cannot carry frame-ancestors, and
+// GitHub Pages cannot set response headers — so refuse to run inside a frame
+// here instead, to rule out clickjacking (e.g. a disguised "replace" import).
+function isFramed() {
+  try {
+    return window.top !== window.self;
+  } catch {
+    return true;
+  }
+}
+
+function renderFramedNotice() {
+  document.body.innerHTML = '';
+  const a = document.createElement('a');
+  a.href = window.location.href;
+  a.target = '_top';
+  a.rel = 'noopener';
+  a.className = 'framed-notice';
+  a.textContent = t('framedNotice');
+  document.body.appendChild(a);
+}
+
 function init() {
   const persisted = load();
   state.set('prefs', persisted.prefs);
@@ -101,6 +133,11 @@ function init() {
   setTheme(persisted.prefs.theme);
   applyTranslations();
 
+  if (isFramed()) {
+    renderFramedNotice();
+    return;
+  }
+
   const themeBtn = document.getElementById('themeToggle');
   if (themeBtn) themeBtn.textContent = themeIcon(persisted.prefs.theme);
   updateLangButton();
@@ -112,7 +149,6 @@ function init() {
       const inp = document.getElementById('searchInput');
       if (inp) inp.focus();
     },
-    onLangChange: onLanguageChanged,
     onThemeChange: () => {},
     onStatsToggle: () => toggleStatsView(),
   });
@@ -145,10 +181,9 @@ function init() {
 function setupListeners() {
   document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 
-  document.getElementById('langToggle').addEventListener('click', () => {
-    toggleLang();
-    onLanguageChanged();
-  });
+  // Re-rendering happens in the 'lang' subscription, shared with the L shortcut
+  // and with prefs applied from an imported file.
+  document.getElementById('langToggle').addEventListener('click', toggleLang);
 
   document.getElementById('closeModal').addEventListener('click', closeModal);
   document.getElementById('emojiModal').addEventListener('click', (e) => {
@@ -188,8 +223,8 @@ function setupListeners() {
     if (name) createCollection(name);
   });
   document.getElementById('exportBtn').addEventListener('click', downloadExport);
-  document.getElementById('importBtn').addEventListener('click', () => {
-    const mode = promptImportMode();
+  document.getElementById('importBtn').addEventListener('click', async () => {
+    const mode = await promptImportMode();
     if (mode) triggerImport(mode);
   });
   document.getElementById('statsBtn').addEventListener('click', toggleStatsView);
@@ -200,14 +235,20 @@ function setupListeners() {
 function setupSubscriptions() {
   // localStorage writes are synchronous JSON.stringify over the whole blob;
   // coalesce bursts (a rapid multi-select, say) into a single write.
+  let warnedStorageFull = false;
   const persist = debounce(() => {
-    save({
+    const ok = save({
       prefs: state.get('prefs'),
       favorites: state.get('favorites'),
       recent: state.get('recent'),
       collections: state.get('collections'),
       stats: state.get('stats'),
     });
+    // Warn once per session rather than on every subsequent write.
+    if (!ok && !warnedStorageFull) {
+      warnedStorageFull = true;
+      showNotification(t('errStorageFull'), 'error');
+    }
   }, 300);
 
   ['favorites', 'recent', 'collections', 'stats', 'prefs'].forEach((key) => {
@@ -222,10 +263,13 @@ function setupSubscriptions() {
   });
   state.subscribe('recent', () => renderRecentSection());
   state.subscribe('collections', () => renderCollectionsUI());
-  state.subscribe('selected', () => {
+  state.subscribe('selected', (sel) => {
     refreshBar();
-    refreshSelectedCards();
+    updateSelectedCards(sel);
   });
+  state.subscribe('lang', () => onLanguageChanged());
+  // Cards bake the tone into their glyph, so a tone change means a re-render.
+  state.subscribe('skinTone', () => renderAllSections());
   state.subscribe('view', (view) => applyView(view));
 }
 
@@ -271,10 +315,10 @@ function renderCollectionsUI() {
   });
 }
 
-function addSelectionToCollection() {
+async function addSelectionToCollection() {
   const sel = state.get('selected');
   if (!sel.size) return;
-  const target = pickCollection();
+  const target = await pickCollection();
   if (target === null) return;
   if (target === 'new') {
     const name = prompt(t('promptCollectionName'));
@@ -284,7 +328,7 @@ function addSelectionToCollection() {
   } else {
     addManyToCollection(target, [...sel]);
     state.set('currentCollection', target);
-    showNotification(t('notificationCollectionCreated'));
+    showNotification(t('notificationAddedToCollection'));
   }
   exitSelectMode();
   performFilter();
@@ -333,36 +377,22 @@ function renderMainGrid() {
 }
 
 function renderRecentSection() {
-  const section = document.getElementById('recentSection');
-  const container = document.getElementById('recentEmojis');
-  const recent = state.get('recent');
   const byChar = state.get('emojisByChar');
-  if (!recent.length || !byChar.size) {
-    section.hidden = true;
-    return;
-  }
-  section.hidden = false;
-  const items = recent
+  const items = state
+    .get('recent')
     .slice(0, 10)
     .map((r) => byChar.get(r.e))
     .filter(Boolean);
-  renderGrid(container, items, gridHandlers);
-  setupRovingTabindex('#recentEmojis');
+  renderMiniSection('recentSection', 'recentEmojis', items, gridHandlers);
 }
 
 function renderFavoritesSection() {
-  const section = document.getElementById('favoritesSection');
-  const container = document.getElementById('favoriteEmojis');
-  const favs = state.get('favorites');
   const byChar = state.get('emojisByChar');
-  if (!favs.length || !byChar.size) {
-    section.hidden = true;
-    return;
-  }
-  section.hidden = false;
-  const items = favs.map((c) => byChar.get(c)).filter(Boolean);
-  renderGrid(container, items, gridHandlers);
-  setupRovingTabindex('#favoriteEmojis');
+  const items = state
+    .get('favorites')
+    .map((c) => byChar.get(c))
+    .filter(Boolean);
+  renderMiniSection('favoritesSection', 'favoriteEmojis', items, gridHandlers);
 }
 
 function renderAllSections() {
@@ -370,18 +400,6 @@ function renderAllSections() {
   renderRecentSection();
   renderFavoritesSection();
   renderCollectionsUI();
-}
-
-function refreshSelectedCards() {
-  const sel = state.get('selected');
-  document.querySelectorAll('.emoji-card').forEach((card) => {
-    const ch = card.dataset.emoji;
-    if (!ch) return;
-    const isSel = sel.has(ch);
-    card.classList.toggle('selected', isSel);
-    const box = card.querySelector('.select-checkbox');
-    if (box) box.textContent = isSel ? '✓' : '';
-  });
 }
 
 function toggleStatsView() {
@@ -404,15 +422,10 @@ function applyView(view) {
 
 function handleSharedCollection(payload) {
   const lang = getLang();
-  const name = payload.n
-    ? payload.n[lang] || payload.n.ar || payload.n.en
-    : 'Shared Collection';
+  const n = payload.n || {};
+  const name = n[lang] || n.ar || n.en || t('sharedCollectionDefault');
   const count = payload.e ? payload.e.length : 0;
-  const msg =
-    lang === 'ar'
-      ? `استيراد مجموعة "${name}" تحتوي على ${count} إيموجي؟`
-      : `Import collection "${name}" with ${count} emojis?`;
-  if (confirm(msg)) {
+  if (confirm(t('importSharedPrompt', { name, count }))) {
     importSharedCollection(payload);
   }
 }

@@ -2,6 +2,8 @@ import * as state from './state.js';
 import { t } from './i18n.js';
 import { copyText } from './utils.js';
 import { showNotification } from './notify.js';
+import { applyTone, supports } from './skinTone.js';
+import { recordUsage } from './stats.js';
 
 export function enterSelectMode() {
   state.set('selectMode', true);
@@ -46,8 +48,22 @@ function getSeparator() {
 export async function copyAllSelected() {
   const sel = state.get('selected');
   if (!sel.size) return;
-  const text = [...sel].join(getSeparator());
-  await copyText(text);
+  // Selection stores base characters; apply the chosen skin tone on the way
+  // out so "copy all" matches what the grid and the modal show.
+  const byChar = state.get('emojisByChar');
+  const tone = state.get('skinTone');
+  const chars = [...sel].map((ch) => {
+    const obj = byChar.get(ch);
+    return obj && supports(obj) ? applyTone(ch, tone) : ch;
+  });
+  try {
+    await copyText(chars.join(getSeparator()));
+  } catch (err) {
+    console.warn('Copy failed:', err);
+    showNotification(t('errCopyFailed'), 'error');
+    return;
+  }
+  sel.forEach((ch) => recordUsage(ch));
   showNotification(t('notificationCopied'));
 }
 

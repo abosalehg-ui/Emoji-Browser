@@ -81,6 +81,7 @@ manifest.webmanifest    PWA manifest
 scripts/                ES modules, one concern each
   main.js               Composition root / wiring
   views.js              Category bar, collection chips, collection picker
+  dialog.js             Button-based chooser (<dialog>) used instead of prompt()
   state.js              Central pub/sub store
   storage.js            localStorage load/save, schema migration, import/export
   search.js             Search + category filtering + index
@@ -93,12 +94,13 @@ scripts/                ES modules, one concern each
   a11y.js, pwa.js, notify.js, prefs.js, utils.js
   tools/validate-data.mjs   Dataset & version validator
 styles/                 Token-based CSS (tokens, base, layout, components,
-                        themes, rtl, animations, responsive)
+                        themes, animations, responsive). RTL comes from
+                        logical properties, so there is no separate rtl.css
 data/
   categories.json       Category definitions
   manifest.json         Precache file list + release version
   emojis/*.json         One file per category
-test/                   Vitest unit tests
+test/                   Vitest: unit tests + DOM flow tests (flows.test.js)
 ```
 
 ### Data model / نموذج البيانات

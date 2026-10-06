@@ -71,3 +71,10 @@ describe('buildShareUrl', () => {
     });
   });
 });
+
+describe('sanitizeSharePayload length limits', () => {
+  it('drops entries too long to be an emoji', () => {
+    const out = sanitizeSharePayload({ e: ['😀', 'x'.repeat(5000), '', 7] });
+    expect(out.e).toEqual(['😀']);
+  });
+});

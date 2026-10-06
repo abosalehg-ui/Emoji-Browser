@@ -17,7 +17,6 @@ export const translations = {
     copyEmoji: 'نسخ الإيموجي',
     copyUnicode: 'نسخ Unicode',
     copyHtml: 'نسخ HTML',
-    platformTitle: 'الدعم على المنصات:',
     skinToneLabel: 'لون البشرة:',
     notificationCopied: 'تم النسخ بنجاح! ✅',
     notificationAdded: 'تمت الإضافة للمفضلة! ⭐',
@@ -77,6 +76,17 @@ export const translations = {
     closeBtn: 'إغلاق',
     loading: 'جارٍ التحميل...',
     errorDataLoad: 'تعذّر تحميل بيانات الإيموجي. تحقق من اتصالك ثم أعد المحاولة.',
+    errCopyFailed: 'تعذّر النسخ. انسخ يدويًا أو امنح المتصفح صلاحية الحافظة.',
+    errStorageFull:
+      'مساحة التخزين ممتلئة — لن تُحفظ التغييرات الجديدة. صدّر بياناتك ثم احذف بعض المجموعات.',
+    catAll: 'الكل',
+    footerDev: 'تطوير: عبدالكريم العبود',
+    sharedCollectionDefault: 'مجموعة مشتركة',
+    importSharedPrompt: 'استيراد مجموعة "{name}" تحتوي على {count} إيموجي؟',
+    pickCollectionTitle: 'إضافة إلى أي مجموعة؟',
+    pickCollectionNew: '+ مجموعة جديدة',
+    notificationAddedToCollection: 'تمت الإضافة إلى المجموعة! 📁',
+    framedNotice: 'افتح متصفح الإيموجي في نافذة مستقلة',
     errImportFailed: 'فشل الاستيراد: الملف غير صالح أو تالف.',
     errFileTooLarge: 'الملف كبير جدًا (الحد الأقصى 5 ميجابايت).',
     errCollectionTooLarge: 'المجموعة أكبر من أن تُشارَك عبر رابط.',
@@ -130,7 +140,6 @@ export const translations = {
     copyEmoji: 'Copy Emoji',
     copyUnicode: 'Copy Unicode',
     copyHtml: 'Copy HTML',
-    platformTitle: 'Platform Support:',
     skinToneLabel: 'Skin tone:',
     notificationCopied: 'Copied successfully! ✅',
     notificationAdded: 'Added to favorites! ⭐',
@@ -190,6 +199,17 @@ export const translations = {
     closeBtn: 'Close',
     loading: 'Loading...',
     errorDataLoad: 'Could not load emoji data. Check your connection and retry.',
+    errCopyFailed: 'Copy failed. Copy manually or allow clipboard access.',
+    errStorageFull:
+      'Storage is full — new changes will not be saved. Export your data, then delete some collections.',
+    catAll: 'All',
+    footerDev: 'Developed by Abdulkareem Al-Aboud',
+    sharedCollectionDefault: 'Shared Collection',
+    importSharedPrompt: 'Import collection "{name}" with {count} emojis?',
+    pickCollectionTitle: 'Add to which collection?',
+    pickCollectionNew: '+ New collection',
+    notificationAddedToCollection: 'Added to collection! 📁',
+    framedNotice: 'Open Emoji Browser in its own window',
     errImportFailed: 'Import failed: the file is invalid or corrupted.',
     errFileTooLarge: 'File is too large (5 MB maximum).',
     errCollectionTooLarge: 'Collection is too large to share via URL.',
@@ -230,9 +250,13 @@ let currentLang = DEFAULT_LANG;
 
 // Defence in depth: storage.js already rejects unknown languages, but t() is
 // called from everywhere and must never be the thing that takes the app down.
-export function t(key) {
+// `vars` fills {placeholders}, so sentences that embed a value can be
+// translated as a whole rather than glued together per language at call sites.
+export function t(key, vars) {
   const table = translations[currentLang] || translations[DEFAULT_LANG];
-  return table[key] || translations[DEFAULT_LANG][key] || key;
+  const str = table[key] || translations[DEFAULT_LANG][key] || key;
+  if (!vars) return str;
+  return str.replace(/\{(\w+)\}/g, (m, name) => (name in vars ? String(vars[name]) : m));
 }
 
 export function getLang() {

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   exportData,
   importData,
@@ -6,6 +6,7 @@ import {
   normalize,
   safePrefs,
   safeCollection,
+  save,
 } from '../scripts/storage.js';
 
 describe('exportData', () => {
@@ -173,5 +174,31 @@ describe('importData validation', () => {
       'replace'
     );
     expect(next.favorites).toEqual(['😀']);
+  });
+});
+
+describe('save', () => {
+  it('reports a failed write (e.g. quota exceeded) by returning false', () => {
+    const spy = vi.spyOn(window.Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new window.DOMException('full', 'QuotaExceededError');
+    });
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(save(defaultState())).toBe(false);
+    spy.mockRestore();
+    expect(save(defaultState())).toBe(true);
+  });
+});
+
+describe('length limits on untrusted emoji strings', () => {
+  it('drops oversized entries from favorites, collections and stats', () => {
+    const big = 'x'.repeat(1000);
+    const out = normalize({
+      favorites: ['😀', big],
+      collections: [{ id: 'a', name: { ar: 'x' }, emojis: ['🐶', big] }],
+      stats: { counts: { '😀': 2, [big]: 9 } },
+    });
+    expect(out.favorites).toEqual(['😀']);
+    expect(out.collections[0].emojis).toEqual(['🐶']);
+    expect(out.stats.counts).toEqual({ '😀': 2 });
   });
 });

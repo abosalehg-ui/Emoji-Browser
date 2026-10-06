@@ -10,21 +10,51 @@ export function persistPref(key, value) {
   state.set('prefs', prefs);
 }
 
+function applyTheme(theme) {
+  setTheme(theme);
+  state.set('theme', theme);
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = themeIcon(theme);
+}
+
+// The DOM and i18n module are updated before the store emits, so 'lang'
+// subscribers (main.js re-renders every view on it) already see the new
+// language when they call t()/getLang().
+function applyLang(lang) {
+  setLang(lang);
+  applyTranslations();
+  state.set('lang', lang);
+}
+
 export function toggleTheme() {
   const next = cycleTheme(state.get('theme'));
-  state.set('theme', next);
-  setTheme(next);
+  applyTheme(next);
   persistPref('theme', next);
-  const btn = document.getElementById('themeToggle');
-  if (btn) btn.textContent = themeIcon(next);
   return next;
 }
 
 export function toggleLang() {
   const next = getLang() === 'ar' ? 'en' : 'ar';
-  state.set('lang', next);
+  applyLang(next);
   persistPref('lang', next);
-  setLang(next);
-  applyTranslations();
   return next;
+}
+
+export function setSkinTone(tone) {
+  state.set('skinTone', tone);
+  persistPref('skinTone', tone);
+}
+
+// Makes a prefs object (e.g. from an imported file) take effect immediately.
+// Writing it to the store alone only persisted it: the theme attribute, the
+// UI language and the runtime theme/lang/skinTone keys all kept their old
+// values, and the next theme toggle overwrote the imported choice.
+export function applyPrefs(prefs) {
+  if (!prefs) return;
+  state.set('prefs', { ...(state.get('prefs') || {}), ...prefs });
+  if (prefs.theme && prefs.theme !== state.get('theme')) applyTheme(prefs.theme);
+  if (prefs.skinTone && prefs.skinTone !== state.get('skinTone')) {
+    state.set('skinTone', prefs.skinTone);
+  }
+  if (prefs.lang && prefs.lang !== getLang()) applyLang(prefs.lang);
 }
