@@ -4,6 +4,9 @@
 import * as state from './state.js';
 import { t, getLang } from './i18n.js';
 import { getCollectionName } from './collections.js';
+import { choiceDialog } from './dialog.js';
+import { renderGrid } from './render.js';
+import { setupRovingTabindex } from './a11y.js';
 
 export function renderCategoriesUI(onSelect) {
   const container = document.getElementById('categories');
@@ -16,13 +19,7 @@ export function renderCategoriesUI(onSelect) {
 
   const frag = document.createDocumentFragment();
   frag.appendChild(
-    categoryButton(
-      'all',
-      '',
-      lang === 'ar' ? 'الكل' : 'All',
-      !inCollection && current === 'all',
-      onSelect
-    )
+    categoryButton('all', '', t('catAll'), !inCollection && current === 'all', onSelect)
   );
   cats.forEach((cat) => {
     frag.appendChild(
@@ -123,21 +120,36 @@ export function renderCollectionsBar({ onOpen, onShare, onRename, onDelete }) {
   bar.appendChild(frag);
 }
 
-// Replaces the old prompt()-only flow, which always created a brand-new
-// collection even though the button reads "add to collection". Returns the
-// chosen collection id, the string 'new', or null when cancelled.
+// Lets the user pick a target collection with buttons rather than by typing a
+// number into prompt(). Resolves with the chosen collection id, the string
+// 'new', or null when cancelled.
 export function pickCollection() {
   const colls = state.get('collections');
-  if (!colls.length) return 'new';
+  if (!colls.length) return Promise.resolve('new');
   const lang = getLang();
-  const lines = colls.map((c, i) => `${i + 1}. ${getCollectionName(c, lang)}`);
-  const message =
-    lang === 'ar'
-      ? `اختر رقم المجموعة، أو 0 لإنشاء مجموعة جديدة:\n${lines.join('\n')}`
-      : `Enter a collection number, or 0 to create a new one:\n${lines.join('\n')}`;
-  const answer = prompt(message, '0');
-  if (answer === null) return null;
-  const idx = Number.parseInt(answer, 10);
-  if (Number.isNaN(idx) || idx < 0 || idx > colls.length) return null;
-  return idx === 0 ? 'new' : colls[idx - 1].id;
+  return choiceDialog({
+    title: t('pickCollectionTitle'),
+    options: [
+      ...colls.map((c) => ({
+        label: `${getCollectionName(c, lang)} (${(c.emojis || []).length})`,
+        value: c.id,
+      })),
+      { label: t('pickCollectionNew'), value: 'new' },
+    ],
+  });
+}
+
+// Shared body of the "recent" and "favorites" strips: hide the section when
+// there is nothing to show, otherwise render the given emoji objects.
+export function renderMiniSection(sectionId, containerId, items, handlers) {
+  const section = document.getElementById(sectionId);
+  const container = document.getElementById(containerId);
+  if (!section || !container) return;
+  if (!items.length) {
+    section.hidden = true;
+    return;
+  }
+  section.hidden = false;
+  renderGrid(container, items, handlers);
+  setupRovingTabindex(`#${containerId}`);
 }

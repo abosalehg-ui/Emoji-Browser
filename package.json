@@ -1,6 +1,6 @@
 {
   "name": "emoji-browser",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Bilingual (Arabic/English) emoji browser PWA — search, favorites, collections, and usage stats. Zero runtime dependencies.",
   "type": "module",
   "scripts": {
@@ -31,6 +31,6 @@
     "eslint": "^9.15.0",
     "jsdom": "^30.0.1",
     "prettier": "^3.3.3",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   }
 }

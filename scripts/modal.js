@@ -3,6 +3,8 @@ import { copyText, htmlEntity } from './utils.js';
 import * as state from './state.js';
 import { TONES, applyTone, supports } from './skinTone.js';
 import { showNotification } from './notify.js';
+import { setSkinTone } from './prefs.js';
+import { recordUsage } from './stats.js';
 
 let currentEmoji = null;
 let lastFocusedElement = null;
@@ -44,36 +46,9 @@ export function openEmojiModal(emojiObj) {
     skinRow.hidden = true;
   }
 
-  renderPlatformList();
-
   modal.classList.add('show');
   modal.setAttribute('aria-hidden', 'false');
   trapFocus(modal);
-}
-
-const PLATFORMS = [
-  'Apple (iOS)',
-  'Google (Android)',
-  'Microsoft (Windows)',
-  'Samsung',
-  'WhatsApp',
-  'Twitter',
-  'Facebook',
-];
-
-function renderPlatformList() {
-  const list = document.getElementById('platformList');
-  list.innerHTML = '';
-  PLATFORMS.forEach((platform) => {
-    const row = document.createElement('div');
-    row.className = 'platform-item';
-    const name = document.createElement('span');
-    name.textContent = platform;
-    const mark = document.createElement('span');
-    mark.textContent = '✅';
-    row.append(name, mark);
-    list.appendChild(row);
-  });
 }
 
 function renderSkinTones(emojiObj) {
@@ -88,16 +63,23 @@ function renderSkinTones(emojiObj) {
   const currentTone = state.get('skinTone');
   TONES.forEach((tone) => {
     const btn = document.createElement('button');
-    btn.className = 'skintone-swatch' + (tone.id === currentTone ? ' active' : '');
-    btn.textContent = tone.modifier ? emojiObj.emoji + tone.modifier : emojiObj.emoji;
+    btn.type = 'button';
+    const isActive = tone.id === currentTone;
+    btn.className = 'skintone-swatch' + (isActive ? ' active' : '');
+    btn.setAttribute('aria-pressed', String(isActive));
+    btn.dataset.tone = tone.id;
+    btn.textContent = applyTone(emojiObj.emoji, tone.id);
     btn.setAttribute('aria-label', getLang() === 'ar' ? tone.ar : tone.en);
     btn.addEventListener('click', () => {
-      state.set('skinTone', tone.id);
-      const prefs = state.get('prefs') || {};
-      prefs.skinTone = tone.id;
-      state.set('prefs', prefs);
+      setSkinTone(tone.id);
       document.getElementById('modalEmoji').textContent = applyTone(emojiObj.emoji, tone.id);
-      renderSkinTones(emojiObj);
+      // Update the swatches in place: rebuilding them removed the focused
+      // button, which dropped keyboard focus to <body> and out of the modal.
+      row.querySelectorAll('.skintone-swatch').forEach((b) => {
+        const on = b.dataset.tone === tone.id;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', String(on));
+      });
     });
     row.appendChild(btn);
   });
@@ -112,10 +94,17 @@ export function closeModal() {
     modal.removeEventListener('keydown', trapHandler);
     trapHandler = null;
   }
+  const char = currentEmoji && currentEmoji.emoji;
   currentEmoji = null;
-  if (lastFocusedElement && lastFocusedElement.focus) {
-    lastFocusedElement.focus();
+  // A skin-tone change re-renders the grids while the modal is open, which
+  // detaches the card that opened it — fall back to its replacement.
+  let target = lastFocusedElement;
+  if (target && !target.isConnected && char) {
+    target = [...document.querySelectorAll('.emoji-card')].find(
+      (c) => c.dataset.emoji === char
+    );
   }
+  if (target && target.focus) target.focus();
 }
 
 export function copyEmojiFromModal(type) {
@@ -135,7 +124,18 @@ export function copyEmojiFromModal(type) {
       text = htmlEntity(currentEmoji.unicode || '');
       break;
   }
-  copyText(text).then(() => showNotification(t('notificationCopied')));
+  const emoji = currentEmoji.emoji;
+  copyText(text)
+    .then(() => {
+      // Counted here rather than when the modal opens, so "total copies" in
+      // the dashboard measures what its label says.
+      recordUsage(emoji);
+      showNotification(t('notificationCopied'));
+    })
+    .catch((err) => {
+      console.warn('Copy failed:', err);
+      showNotification(t('errCopyFailed'), 'error');
+    });
 }
 
 function trapFocus(modal) {

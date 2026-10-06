@@ -1,4 +1,5 @@
 import { toBase64Url, fromBase64Url, copyText } from './utils.js';
+import { isEmojiString, MAX_COLLECTION_EMOJIS } from './storage.js';
 import { t, getLang } from './i18n.js';
 import { showNotification } from './notify.js';
 import * as state from './state.js';
@@ -32,8 +33,13 @@ export async function shareCollection(collection) {
       /* fall through to clipboard */
     }
   }
-  await copyText(url);
-  showNotification(t('notificationCollectionShared'));
+  try {
+    await copyText(url);
+    showNotification(t('notificationCollectionShared'));
+  } catch (err) {
+    console.warn('Copy failed:', err);
+    showNotification(t('errCopyFailed'), 'error');
+  }
 }
 
 export function parseShareUrl() {
@@ -55,7 +61,7 @@ export function sanitizeSharePayload(raw) {
   if (!raw || typeof raw !== 'object') return null;
   const name = raw.n && typeof raw.n === 'object' ? raw.n : {};
   const emojis = Array.isArray(raw.e)
-    ? raw.e.filter((e) => typeof e === 'string').slice(0, 500)
+    ? raw.e.filter(isEmojiString).slice(0, MAX_COLLECTION_EMOJIS)
     : [];
   return {
     n: {
@@ -74,14 +80,20 @@ export function clearShareParam() {
 }
 
 export function importSharedCollection(payload) {
-  const name = payload.n || { ar: 'مجموعة مشتركة', en: 'Shared Collection' };
-  const lang = getLang();
-  const coll = createCollection(name[lang] || name.ar || name.en || 'Shared', payload.e || []);
-  if (payload.c) {
-    state.set(
-      'collections',
-      state.get('collections').map((c) => (c.id === coll.id ? { ...c, color: payload.c } : c))
-    );
-  }
+  const fallback = t('sharedCollectionDefault');
+  const n = payload.n || {};
+  const ar = n.ar || n.en || fallback;
+  const en = n.en || n.ar || fallback;
+  // Keep both language variants of the shared name (createCollection would
+  // copy the current-language one into both), and the sender's colour.
+  const coll = createCollection(ar, payload.e || []);
+  state.set(
+    'collections',
+    state
+      .get('collections')
+      .map((c) =>
+        c.id === coll.id ? { ...c, name: { ar, en }, color: payload.c || c.color } : c
+      )
+  );
   return coll;
 }

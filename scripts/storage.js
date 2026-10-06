@@ -13,8 +13,16 @@ export const VALID_SKIN_TONES = [
   'dark',
 ];
 
-const MAX_COLLECTION_EMOJIS = 500;
+export const MAX_COLLECTION_EMOJIS = 500;
 const MAX_NAME_LENGTH = 100;
+// The longest sequence in the dataset (a ZWJ family/flag) is well under 32
+// UTF-16 units. Anything longer is not an emoji, and accepting it let a shared
+// link or imported file park arbitrary-length strings in the storage quota.
+const MAX_EMOJI_LENGTH = 32;
+
+export function isEmojiString(e) {
+  return typeof e === 'string' && e.length > 0 && e.length <= MAX_EMOJI_LENGTH;
+}
 
 // ---------------------------------------------------------------------------
 // Validation
@@ -48,10 +56,7 @@ export function safeCollection(c) {
     id: c.id.slice(0, MAX_NAME_LENGTH),
     name: { ar: ar || en, en: en || ar },
     emojis: Array.isArray(c.emojis)
-      ? [...new Set(c.emojis.filter((e) => typeof e === 'string'))].slice(
-          0,
-          MAX_COLLECTION_EMOJIS
-        )
+      ? [...new Set(c.emojis.filter(isEmojiString))].slice(0, MAX_COLLECTION_EMOJIS)
       : [],
     color:
       typeof c.color === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(c.color) ? c.color : '#2c6cb0',
@@ -65,13 +70,13 @@ function safeCollections(list) {
 }
 
 function safeFavorites(list) {
-  return Array.isArray(list) ? list.filter((e) => typeof e === 'string') : [];
+  return Array.isArray(list) ? list.filter(isEmojiString) : [];
 }
 
 function safeRecent(list) {
   return Array.isArray(list)
     ? list
-        .filter((r) => r && typeof r.e === 'string')
+        .filter((r) => r && isEmojiString(r.e))
         .map((r) => ({
           e: r.e,
           t: Number.isFinite(r.t) ? r.t : Date.now(),
@@ -83,7 +88,7 @@ function safeCountMap(obj) {
   if (!obj || typeof obj !== 'object') return {};
   const out = {};
   for (const [k, v] of Object.entries(obj)) {
-    if (typeof k === 'string' && Number.isFinite(v)) out[k] = v;
+    if (isEmojiString(k) && Number.isFinite(v)) out[k] = v;
   }
   return out;
 }
@@ -133,6 +138,8 @@ export function load() {
   return defaultState();
 }
 
+// Returns false when the write failed (typically QuotaExceededError), so the
+// caller can tell the user instead of silently dropping their changes.
 export function save(state) {
   try {
     const payload = {
@@ -144,8 +151,10 @@ export function save(state) {
       stats: state.stats,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    return true;
   } catch (err) {
     console.warn('Storage save failed:', err);
+    return false;
   }
 }
 

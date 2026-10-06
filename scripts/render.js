@@ -3,10 +3,19 @@ import { t, getLang } from './i18n.js';
 import { applyTone, supports } from './skinTone.js';
 import { escapeHtml } from './utils.js';
 
-export function createEmojiCard(emojiObj, { onClick, onFavorite, onSelect } = {}, index = 0) {
+// Cards carry no listeners of their own. Each grid container gets one click
+// and one keydown listener (wired once, see wireGrid) that resolve the card's
+// emoji through the per-container lookup below. Per-card listeners used to add
+// ~4,000 closures on every search keystroke.
+const gridState = new WeakMap(); // container -> { byChar, handlers }
+
+export function createEmojiCard(emojiObj, index = 0) {
   const card = document.createElement('div');
   card.className = 'emoji-card';
-  card.setAttribute('role', 'gridcell');
+  // A list, not an ARIA grid: role="grid" requires role="row" children, and
+  // gridcells placed directly inside it are invalid. Arrow-key navigation is
+  // still provided by a11y.js.
+  card.setAttribute('role', 'listitem');
   // Roving tabindex: exactly one card is in the tab order and the arrow-key
   // handler in a11y.js moves it. Making every card tabbable would put 1358 tab
   // stops between the grid and the footer.
@@ -32,7 +41,7 @@ export function createEmojiCard(emojiObj, { onClick, onFavorite, onSelect } = {}
 
   card.innerHTML = `
     <div class="select-checkbox" aria-hidden="true">${isSel ? '✓' : ''}</div>
-    <button class="favorite-btn ${isFav ? 'active' : ''}" aria-pressed="${isFav}"
+    <button type="button" class="favorite-btn ${isFav ? 'active' : ''}" aria-pressed="${isFav}"
       aria-label="${escapeHtml(t(isFav ? 'ariaRemoveFav' : 'ariaAddFav'))}">
       ${isFav ? '⭐' : '☆'}
     </button>
@@ -40,31 +49,52 @@ export function createEmojiCard(emojiObj, { onClick, onFavorite, onSelect } = {}
     <div class="emoji-name">${escapeHtml(name || '')}</div>
   `;
 
-  const favBtn = card.querySelector('.favorite-btn');
-  favBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (onFavorite) onFavorite(emojiObj);
-  });
-
-  card.addEventListener('click', () => {
-    if (state.get('selectMode')) {
-      if (onSelect) onSelect(emojiObj);
-    } else {
-      if (onClick) onClick(emojiObj);
-    }
-  });
-
-  card.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      card.click();
-    }
-  });
-
   return card;
 }
 
-export function renderGrid(container, emojiList, handlers) {
+function wireGrid(container) {
+  if (gridState.has(container)) return;
+  gridState.set(container, { byChar: new Map(), handlers: {} });
+
+  const resolve = (target) => {
+    const card = target.closest('.emoji-card');
+    if (!card || !container.contains(card)) return null;
+    const { byChar, handlers } = gridState.get(container);
+    const obj = byChar.get(card.dataset.emoji);
+    return obj ? { card, obj, handlers } : null;
+  };
+
+  container.addEventListener('click', (e) => {
+    const hit = resolve(e.target);
+    if (!hit) return;
+    const { obj, handlers } = hit;
+    if (e.target.closest('.favorite-btn')) {
+      if (handlers.onFavorite) handlers.onFavorite(obj);
+    } else if (state.get('selectMode')) {
+      if (handlers.onSelect) handlers.onSelect(obj);
+    } else if (handlers.onClick) {
+      handlers.onClick(obj);
+    }
+  });
+
+  container.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    // Only the card itself: Enter/Space on the star is the button's own click.
+    if (!e.target.classList.contains('emoji-card')) return;
+    e.preventDefault();
+    e.target.click();
+  });
+}
+
+// Above this many cards the staggered entrance animation costs more than it
+// adds (and the last cards would wait the full cap anyway).
+const ANIMATE_MAX = 100;
+
+export function renderGrid(container, emojiList, handlers = {}) {
+  wireGrid(container);
+  const entry = gridState.get(container);
+  entry.handlers = handlers;
+  entry.byChar = new Map();
   container.innerHTML = '';
   if (!emojiList || emojiList.length === 0) {
     const empty = document.createElement('div');
@@ -78,10 +108,13 @@ export function renderGrid(container, emojiList, handlers) {
     container.appendChild(empty);
     return;
   }
+  const animate = emojiList.length <= ANIMATE_MAX;
+  container.classList.toggle('no-anim', !animate);
   const frag = document.createDocumentFragment();
   emojiList.forEach((e, i) => {
-    const card = createEmojiCard(e, handlers, i);
-    card.style.animationDelay = `${Math.min(i * 12, 400)}ms`;
+    entry.byChar.set(e.emoji, e);
+    const card = createEmojiCard(e, i);
+    if (animate) card.style.animationDelay = `${i * 12}ms`;
     frag.appendChild(card);
   });
   container.appendChild(frag);
@@ -114,4 +147,15 @@ export function renderGridStatus(container, messageKey, isError = false) {
   el.className = 'grid-status' + (isError ? ' is-error' : '');
   el.textContent = t(messageKey);
   container.appendChild(el);
+}
+
+// Same idea as updateFavoriteButtons, for the multi-select checkmarks.
+export function updateSelectedCards(selected) {
+  document.querySelectorAll('.emoji-card').forEach((card) => {
+    const isSel = selected.has(card.dataset.emoji);
+    if (card.classList.contains('selected') === isSel) return;
+    card.classList.toggle('selected', isSel);
+    const box = card.querySelector('.select-checkbox');
+    if (box) box.textContent = isSel ? '✓' : '';
+  });
 }

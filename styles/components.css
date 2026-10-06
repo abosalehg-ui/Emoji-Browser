@@ -160,7 +160,7 @@
 .favorite-btn {
   position: absolute;
   top: 4px;
-  right: 4px;
+  inset-inline-end: 4px;
   background: none;
   border: none;
   font-size: 18px;
@@ -193,7 +193,7 @@
 .select-checkbox {
   position: absolute;
   top: 8px;
-  left: 8px;
+  inset-inline-start: 8px;
   width: 22px;
   height: 22px;
   border: 2px solid var(--border-color);
@@ -312,18 +312,6 @@ body.select-mode .select-checkbox {
   padding: 12px;
 }
 
-.platform-support {
-  margin-top: var(--space-lg);
-  padding-top: var(--space-lg);
-  border-top: 2px solid var(--border-color);
-}
-
-.platform-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-}
-
 .skintone-row {
   display: flex;
   gap: 6px;
@@ -354,7 +342,7 @@ body.select-mode .select-checkbox {
 .notification {
   position: fixed;
   top: var(--space-lg);
-  right: var(--space-lg);
+  inset-inline-end: var(--space-lg);
   background-color: var(--success);
   color: var(--on-accent);
   padding: var(--space-md) 25px;
@@ -404,7 +392,7 @@ body.select-mode .select-checkbox {
   font-family: inherit;
   cursor: pointer;
   padding: 6px 4px;
-  min-height: 36px;
+  min-height: 44px;
 }
 
 .collection-chip.active {
@@ -418,51 +406,6 @@ body.select-mode .select-checkbox {
   padding: 2px 8px;
   border-radius: 999px;
   font-size: 12px;
-}
-
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background-color: var(--bg-card);
-  border: 2px solid var(--border-color);
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 12px var(--shadow);
-  min-width: 200px;
-  z-index: 200;
-  display: none;
-  padding: 8px 0;
-}
-
-.dropdown.open .dropdown-menu {
-  display: block;
-}
-
-.dropdown-item {
-  display: block;
-  width: 100%;
-  padding: var(--space-sm) var(--space-md);
-  background: transparent;
-  border: none;
-  text-align: start;
-  cursor: pointer;
-  color: var(--text-primary);
-  font-size: 14px;
-}
-
-.dropdown-item:hover {
-  background-color: var(--bg-secondary);
-}
-
-.divider {
-  height: 1px;
-  background-color: var(--border-color);
-  margin: 6px 0;
 }
 
 .chart-bar {
@@ -516,8 +459,8 @@ body.select-mode .select-checkbox {
   background: transparent;
   color: inherit;
   padding: 0;
-  min-width: 32px;
-  min-height: 32px;
+  min-width: 44px;
+  min-height: 44px;
   font-size: 14px;
   border: none;
   cursor: pointer;
@@ -553,4 +496,73 @@ body.select-mode .select-checkbox {
 .grid-status.is-error {
   color: var(--danger);
   font-weight: 600;
+}
+
+/* Button-based chooser from dialog.js (replaces numeric prompt() flows). */
+.choice-dialog {
+  /* The base.css reset zeroes margin, which defeats the UA's centring. */
+  margin: auto;
+  border: none;
+  border-radius: var(--radius-xl);
+  padding: var(--space-xl);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: 0 10px 40px var(--shadow);
+  width: min(420px, calc(100vw - 2 * var(--space-md)));
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.choice-dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.choice-dialog h2 {
+  margin: 0 0 var(--space-md);
+  font-size: 1.2em;
+}
+
+.choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.choice-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 44px;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-secondary);
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.choice-option:hover,
+.choice-option:focus-visible {
+  border-color: var(--accent-color);
+}
+
+.choice-desc {
+  font-size: 0.85em;
+  color: var(--text-secondary);
+}
+
+.choice-cancel {
+  width: 100%;
+  min-height: 44px;
+}
+
+.framed-notice {
+  display: block;
+  margin: var(--space-xl) auto;
+  text-align: center;
+  font-size: 1.1em;
 }

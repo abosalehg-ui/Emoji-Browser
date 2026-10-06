@@ -21,10 +21,11 @@ jobs:
       - run: npm run format:check
       - run: npm run validate:data
       - run: npm test
-      # Runtime dependencies are the ones that reach users, so a finding there
-      # fails the build; dev-only advisories are reported without blocking.
+      # Runtime dependencies are the ones that reach users, so any finding
+      # there fails the build. Dev tooling fails on high/critical: it used to be
+      # advisory-only (continue-on-error), which let known advisories sit
+      # unnoticed. Dependabot (.github/dependabot.yml) opens the fix PRs.
       - name: Audit runtime dependencies
         run: npm audit --omit=dev --audit-level=low
-      - name: Audit dev dependencies (advisory)
+      - name: Audit dev dependencies
         run: npm audit --audit-level=high
-        continue-on-error: true

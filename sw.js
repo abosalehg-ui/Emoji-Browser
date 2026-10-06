@@ -1,22 +1,23 @@
 // Keep this in sync with "version" in data/manifest.json and package.json.
 // The validate:data check (run in CI) fails the build if they drift, which is
 // what forces the cache to be invalidated whenever the app is re-released.
-const CACHE_VERSION = 'v2.1.0';
+const CACHE_VERSION = 'v2.2.0';
 const CACHE_NAME = `emoji-browser-${CACHE_VERSION}`;
 const MANIFEST_URL = './data/manifest.json';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     (async () => {
+      // No try/catch here on purpose: addAll() is atomic, so a single failed
+      // file leaves this cache empty. Letting the rejection fail the install
+      // keeps the previous worker (and its complete cache) in charge, instead
+      // of activating and deleting the only working offline copy.
+      const manifestRes = await fetch(MANIFEST_URL, { cache: 'no-cache' });
+      if (!manifestRes.ok) throw new Error(`precache manifest: HTTP ${manifestRes.status}`);
+      const manifest = await manifestRes.json();
       const cache = await caches.open(CACHE_NAME);
-      try {
-        const manifestRes = await fetch(MANIFEST_URL);
-        const manifest = await manifestRes.json();
-        await cache.addAll(manifest.files);
-      } catch (err) {
-        console.warn('SW install: precache partially failed', err);
-      }
-      self.skipWaiting();
+      await cache.addAll(manifest.files);
+      await self.skipWaiting();
     })()
   );
 });
@@ -77,14 +78,14 @@ async function networkFirst(req, fallbackUrl, offlineUrl) {
     // poison the shell for every later offline visit.
     if (res && res.ok && !res.redirected) {
       const cache = await caches.open(CACHE_NAME);
-      await cache.put(req, res.clone());
+      await cache.put(navigationKey(req), res.clone());
     }
     return res;
   } catch (err) {
     // respondWith() turns a resolved `undefined` into a hard network error, so
     // every branch below has to produce an actual Response.
     const cached =
-      (await caches.match(req)) ||
+      (await caches.match(navigationKey(req))) ||
       (await caches.match(fallbackUrl)) ||
       (await caches.match(offlineUrl));
     if (cached) return cached;
@@ -95,6 +96,14 @@ async function networkFirst(req, fallbackUrl, offlineUrl) {
   }
 }
 
+// Navigations are keyed without their query string: every ?share=… link is the
+// same app shell, and keying on the full URL stored a new copy per link.
+function navigationKey(req) {
+  const url = new URL(req.url);
+  url.search = '';
+  return url.toString();
+}
+
 async function staleWhileRevalidate(req) {
   const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(req);
@@ -103,6 +112,8 @@ async function staleWhileRevalidate(req) {
       if (res && res.ok) cache.put(req, res.clone());
       return res;
     })
-    .catch(() => cached);
+    // respondWith(undefined) is a hard network error; with nothing cached and
+    // no network, answer with an explicit offline status instead.
+    .catch(() => cached || new Response('', { status: 504, statusText: 'Offline' }));
   return cached || fetchPromise;
 }

@@ -52,6 +52,11 @@
   animation: fadeInUp 0.3s ease backwards;
 }
 
+/* render.js drops the staggered entrance on large result sets. */
+.no-anim .emoji-card {
+  animation: none;
+}
+
 .modal.show .modal-content {
   animation: scaleIn 0.2s ease-out;
 }

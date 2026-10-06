@@ -22,7 +22,6 @@
   <link rel="stylesheet" href="./styles/layout.css">
   <link rel="stylesheet" href="./styles/components.css">
   <link rel="stylesheet" href="./styles/themes.css">
-  <link rel="stylesheet" href="./styles/rtl.css">
   <link rel="stylesheet" href="./styles/animations.css">
   <link rel="stylesheet" href="./styles/responsive.css">
 
@@ -62,17 +61,17 @@
 
     <section id="recentSection" hidden data-i18n-aria="ariaRecentSection" aria-label="المستخدمة مؤخراً">
       <h2 class="section-title" id="recentTitle" data-i18n="recentTitle">المستخدمة مؤخراً</h2>
-      <div class="emoji-grid" id="recentEmojis" role="grid"></div>
+      <div class="emoji-grid" id="recentEmojis" role="list"></div>
     </section>
 
     <section id="favoritesSection" hidden data-i18n-aria="ariaFavoritesSection" aria-label="المفضلة">
       <h2 class="section-title" id="favoritesTitle" data-i18n="favoritesTitle">المفضلة</h2>
-      <div class="emoji-grid" id="favoriteEmojis" role="grid"></div>
+      <div class="emoji-grid" id="favoriteEmojis" role="list"></div>
     </section>
 
     <section data-i18n-aria="ariaAllSection" aria-label="جميع الإيموجي">
       <h2 class="section-title" id="allEmojisTitle" data-i18n="allEmojisTitle">جميع الإيموجي</h2>
-      <div class="emoji-grid" id="emojiGrid" role="grid"></div>
+      <div class="emoji-grid" id="emojiGrid" role="list"></div>
     </section>
   </div>
 
@@ -117,10 +116,6 @@
         <button class="copy-btn" id="copyUnicode" data-i18n="copyUnicode">نسخ Unicode</button>
         <button class="copy-btn" id="copyHtml" data-i18n="copyHtml">نسخ HTML</button>
       </div>
-      <div class="platform-support">
-        <h3 id="platformTitle" data-i18n="platformTitle">الدعم على المنصات:</h3>
-        <div id="platformList"></div>
-      </div>
     </div>
   </div>
 
@@ -142,7 +137,7 @@
 
   <footer role="contentinfo">
     <div class="developer-info">
-      <p>تطوير: عبدالكريم العبود | <a href="mailto:abo.saleh.g@gmail.com">abo.saleh.g@gmail.com</a></p>
+      <p><span data-i18n="footerDev">تطوير: عبدالكريم العبود</span> | <a href="mailto:abo.saleh.g@gmail.com">abo.saleh.g@gmail.com</a></p>
       <p><span lang="en">&copy; 2025 Emoji Browser 😊 &mdash; All Rights Reserved</span></p>
     </div>
   </footer>
