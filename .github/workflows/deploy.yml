@@ -33,7 +33,7 @@ jobs:
           cp index.html offline.html manifest.webmanifest sw.js LICENSE _site/
           cp -r styles scripts data assets _site/
           rm -rf _site/scripts/tools
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
       - id: deployment
