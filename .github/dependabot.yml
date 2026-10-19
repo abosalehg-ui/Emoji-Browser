@@ -1,14 +1,28 @@
 version: 2
+
+# Updates are batched: one PR per group per month, so they never pile up and
+# go stale against main. Dev deps keep their own group; everything else is
+# split into minor/patch and major, since majors are what can break the build.
 updates:
   - package-ecosystem: npm
     directory: "/"
     schedule:
-      interval: weekly
+      interval: monthly
     open-pull-requests-limit: 5
     groups:
       dev-dependencies:
         dependency-type: development
+      minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      major:
+        patterns: ["*"]
+        update-types: ["major"]
+
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: monthly
+    groups:
+      github-actions:
+        patterns: ["*"]
